@@ -41,7 +41,7 @@ body {
 
 .info-panel {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -238,6 +238,41 @@ body {
 
 .message.hide {
   display: none;
+}
+
+.level-notice {
+  position: absolute;
+  left: 50%;
+  top: 74px;
+  z-index: 18;
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 245, 168, 0.7);
+  border-radius: 999px;
+  color: #fff5a8;
+  background: rgba(0, 26, 52, 0.74);
+  box-shadow: 0 0 22px rgba(255, 240, 138, 0.28);
+  font-size: 18px;
+  font-weight: 900;
+  opacity: 0;
+  transform: translate(-50%, -12px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.level-notice.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.level-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #fff5a8;
+  background: rgba(255, 245, 168, 0.13);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .button-row {

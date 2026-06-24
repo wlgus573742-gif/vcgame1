@@ -1,6 +1,7 @@
 const gameArea = document.getElementById("gameArea");
 const player = document.getElementById("player");
 const pearl = document.getElementById("pearl");
+const levelNotice = document.getElementById("levelNotice");
 const obstacleOne = document.getElementById("obstacleOne");
 const obstacleTwo = document.getElementById("obstacleTwo");
 const obstacleThree = document.getElementById("obstacleThree");
@@ -8,6 +9,7 @@ const message = document.getElementById("message");
 
 const scoreEl = document.getElementById("score");
 const targetScoreEl = document.getElementById("targetScore");
+const levelEl = document.getElementById("level");
 const lifeEl = document.getElementById("life");
 const gameStatusEl = document.getElementById("gameStatus");
 
@@ -20,6 +22,8 @@ const rankingList = document.getElementById("rankingList");
 const controlButtons = document.querySelectorAll(".control-btn");
 
 const targetScore = 15;
+const maxLevel = 3;
+const scorePerLevel = 5;
 const playerSize = 58;
 const pearlSize = 52;
 const obstacleSize = 58;
@@ -33,6 +37,8 @@ let gameLoopId = null;
 let lastFrameTime = 0;
 let lastHitTime = 0;
 let difficultyLevel = 1;
+let currentLevel = 1;
+let levelNoticeTimer = null;
 let gameStartTime = 0;
 let lastEndingRecord = null;
 
@@ -64,27 +70,70 @@ const obstacles = [
     x: 360,
     y: 100,
     vx: 80,
-    vy: 54
+    vy: 54,
+    isActive: true
   },
   {
     element: obstacleTwo,
     x: 520,
     y: 285,
     vx: -70,
-    vy: 76
+    vy: 76,
+    isActive: true
   },
   {
     element: obstacleThree,
     x: 190,
     y: 315,
     vx: 92,
-    vy: -62
+    vy: -62,
+    isActive: false
   }
 ];
+
+const baseObstacleSettings = obstacles.map((obstacle) => ({
+  x: obstacle.x,
+  y: obstacle.y,
+  vx: obstacle.vx,
+  vy: obstacle.vy
+}));
 
 targetScoreEl.textContent = targetScore;
 
 const rankingStorageKey = "vcgame1-ranking-top10";
+
+const levelSettings = {
+  1: {
+    name: "1단계",
+    description: "기본 속도 / 장애물 2개",
+    playerSpeed: 275,
+    obstacleSpeedBoost: 0.9,
+    activeObstacles: 2,
+    collisionPadding: 18,
+    invincibleTime: 950,
+    pearlSafeDistance: 125
+  },
+  2: {
+    name: "2단계",
+    description: "장애물 3개 / 이동 속도 증가",
+    playerSpeed: 260,
+    obstacleSpeedBoost: 1.18,
+    activeObstacles: 3,
+    collisionPadding: 14,
+    invincibleTime: 850,
+    pearlSafeDistance: 105
+  },
+  3: {
+    name: "3단계",
+    description: "최고 난이도 / 장애물 속도 증가",
+    playerSpeed: 245,
+    obstacleSpeedBoost: 1.52,
+    activeObstacles: 3,
+    collisionPadding: 10,
+    invincibleTime: 720,
+    pearlSafeDistance: 90
+  }
+};
 
 const audio = {
   ctx: null,
@@ -347,6 +396,24 @@ function playMoveSound() {
   playTone({ frequency: 680, duration: 0.045, gain: 0.045, type: "sine" });
   playTone({ frequency: 980, startTime: 0.035, duration: 0.055, gain: 0.035, type: "triangle" });
   playNoise({ startTime: 0.01, duration: 0.12, gain: 0.025, filterFrequency: 1900 });
+}
+
+
+function playLevelUpSound() {
+  if (!audio.sfxEnabled) return;
+  resumeAudio();
+
+  playTone({ frequency: 523, duration: 0.1, gain: 0.08, type: "triangle" });
+  playTone({ frequency: 784, startTime: 0.1, duration: 0.12, gain: 0.09, type: "triangle" });
+  playTone({ frequency: 1174, startTime: 0.22, duration: 0.16, gain: 0.08, type: "sine" });
+
+  playNoise({
+    startTime: 0.08,
+    duration: 0.32,
+    gain: 0.025,
+    filterFrequency: 3000,
+    filterType: "highpass"
+  });
 }
 
 function playPearlSound() {
@@ -628,8 +695,8 @@ function randomPosition(size, avoidPlayer = true) {
   } while (
     avoidPlayer &&
     attempt < 30 &&
-    Math.abs(x - playerState.x) < 120 &&
-    Math.abs(y - playerState.y) < 120
+    Math.abs(x - playerState.x) < getCurrentLevelSettings().pearlSafeDistance &&
+    Math.abs(y - playerState.y) < getCurrentLevelSettings().pearlSafeDistance
   );
 
   return { x, y };
@@ -637,8 +704,14 @@ function randomPosition(size, avoidPlayer = true) {
 
 function updateInfo() {
   scoreEl.textContent = score;
+  levelEl.textContent = currentLevel;
   lifeEl.textContent = life;
-  gameStatusEl.textContent = isPlaying ? "진행 중" : "대기";
+
+  if (isPlaying) {
+    gameStatusEl.textContent = `${currentLevel}단계 진행 중`;
+  } else {
+    gameStatusEl.textContent = "대기";
+  }
 }
 
 function showMessage(title, text) {
@@ -651,6 +724,74 @@ function showMessage(title, text) {
 
 function hideMessage() {
   message.classList.add("hide");
+}
+
+
+function getCurrentLevelSettings() {
+  return levelSettings[currentLevel] || levelSettings[1];
+}
+
+function getLevelByScore(value) {
+  return Math.min(maxLevel, Math.floor(value / scorePerLevel) + 1);
+}
+
+function showLevelNotice(text) {
+  if (!levelNotice) return;
+
+  clearTimeout(levelNoticeTimer);
+
+  levelNotice.textContent = text;
+  levelNotice.classList.add("show");
+
+  levelNoticeTimer = setTimeout(() => {
+    levelNotice.classList.remove("show");
+  }, 1500);
+}
+
+function applyLevelSettings(shouldResetVelocity = false) {
+  const settings = getCurrentLevelSettings();
+
+  playerState.speed = settings.playerSpeed;
+
+  obstacles.forEach((obstacle, index) => {
+    const base = baseObstacleSettings[index];
+    const shouldBeActive = index < settings.activeObstacles;
+    const wasInactive = !obstacle.isActive;
+
+    obstacle.isActive = shouldBeActive;
+    obstacle.element.style.display = shouldBeActive ? "flex" : "none";
+
+    if (shouldResetVelocity) {
+      obstacle.x = base.x;
+      obstacle.y = base.y;
+      obstacle.vx = base.vx;
+      obstacle.vy = base.vy;
+    }
+
+    if (shouldBeActive && wasInactive && !shouldResetVelocity) {
+      const position = randomPosition(obstacleSize, true);
+      obstacle.x = position.x;
+      obstacle.y = position.y;
+      obstacle.vx = base.vx * (Math.random() < 0.5 ? 1 : -1);
+      obstacle.vy = base.vy * (Math.random() < 0.5 ? 1 : -1);
+    }
+
+    applyPosition(obstacle.element, obstacle.x, obstacle.y);
+  });
+}
+
+function checkLevelProgression() {
+  const nextLevel = getLevelByScore(score);
+
+  if (nextLevel === currentLevel) return;
+
+  currentLevel = nextLevel;
+  applyLevelSettings(false);
+  updateInfo();
+
+  const settings = getCurrentLevelSettings();
+  showLevelNotice(`${settings.name} 진입!`);
+  playLevelUpSound();
 }
 
 function formatPlayTime(ms) {
@@ -690,6 +831,10 @@ function sortRankings(rankings) {
       return a.result === "성공" ? -1 : 1;
     }
 
+    if ((b.level || 1) !== (a.level || 1)) {
+      return (b.level || 1) - (a.level || 1);
+    }
+
     return a.playTime - b.playTime;
   });
 }
@@ -712,7 +857,7 @@ function renderRankings() {
           <span class="ranking-result"> ${rank.result}</span>
           <br />
           <span class="ranking-meta">
-            점수 ${rank.score}점 · 생명 ${rank.life} · 플레이 시간 ${formatPlayTime(rank.playTime)} · ${rank.date}
+            점수 ${rank.score}점 · 도달 단계 ${rank.level || 1}/3 · 생명 ${rank.life} · 플레이 시간 ${formatPlayTime(rank.playTime)} · ${rank.date}
           </span>
         </li>
       `;
@@ -771,6 +916,7 @@ function showEndingMessage(isWin) {
   lastEndingRecord = {
     result: resultText,
     score,
+    level: currentLevel,
     life,
     playTime,
     date: new Date().toLocaleString("ko-KR")
@@ -780,6 +926,7 @@ function showEndingMessage(isWin) {
   message.innerHTML = `
     <strong>${title}</strong>
     <span>${description}</span>
+    <span class="level-badge">도달 단계: ${currentLevel} / 3</span>
     <span class="save-hint">
       닉네임을 남기면 이번 플레이 로그가 랭킹에 저장됩니다.
     </span>
@@ -844,9 +991,7 @@ function resetGameObjects() {
   applyPosition(player, playerState.x, playerState.y);
   applyPosition(pearl, pearlState.x, pearlState.y);
 
-  obstacles.forEach((obstacle) => {
-    applyPosition(obstacle.element, obstacle.x, obstacle.y);
-  });
+  applyLevelSettings(true);
 }
 
 function startGame() {
@@ -856,6 +1001,7 @@ function startGame() {
   score = 0;
   life = 3;
   difficultyLevel = 1;
+  currentLevel = 1;
   isPlaying = true;
   isInvincible = false;
   lastFrameTime = 0;
@@ -887,6 +1033,7 @@ function resetGame() {
   score = 0;
   life = 3;
   difficultyLevel = 1;
+  currentLevel = 1;
   lastFrameTime = 0;
   lastHitTime = 0;
   gameStartTime = Date.now();
@@ -905,7 +1052,7 @@ function resetGame() {
     gameLoopId = null;
   }
 
-  showMessage("심해 진주 줍기", "게임 시작을 누른 뒤 방향키로 움직이세요.");
+  showMessage("심해 진주 줍기", "1단계부터 시작해 진주를 모을수록 2단계, 3단계로 어려워집니다.");
 }
 
 function endGame(isWin) {
@@ -975,9 +1122,13 @@ function movePlayer(deltaTime) {
 
 function moveObstacles(deltaTime) {
   const bounds = getBounds();
-  const speedBoost = 1 + (difficultyLevel - 1) * 0.08;
+  const settings = getCurrentLevelSettings();
+  const scorePressure = Math.min(score * 0.012, 0.18);
+  const speedBoost = settings.obstacleSpeedBoost + scorePressure;
 
   obstacles.forEach((obstacle) => {
+    if (!obstacle.isActive) return;
+
     obstacle.x += obstacle.vx * speedBoost * deltaTime;
     obstacle.y += obstacle.vy * speedBoost * deltaTime;
 
@@ -1010,6 +1161,7 @@ function isRectColliding(a, b, padding = 8) {
 function collectPearl() {
   score += 1;
   difficultyLevel = 1 + Math.floor(score / 4) * 0.35;
+  checkLevelProgression();
 
   const nextPosition = randomPosition(pearlSize, true);
   pearlState.x = nextPosition.x;
@@ -1040,7 +1192,7 @@ function hitObstacle() {
   setTimeout(() => {
     player.style.opacity = "1";
     isInvincible = false;
-  }, 900);
+  }, getCurrentLevelSettings().invincibleTime);
 
   if (life <= 0) {
     endGame(false);
@@ -1053,7 +1205,9 @@ function checkInteractions() {
   }
 
   obstacles.forEach((obstacle) => {
-    if (isRectColliding(player, obstacle.element, 14)) {
+    if (!obstacle.isActive) return;
+
+    if (isRectColliding(player, obstacle.element, getCurrentLevelSettings().collisionPadding)) {
       hitObstacle();
     }
   });

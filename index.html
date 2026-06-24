@@ -10,12 +10,13 @@
   <div class="game-wrapper">
     <header class="game-header">
       <h1>심해 진주 줍기</h1>
-      <p>방향키로 다이버를 움직여 진주를 모으고 바위와 해파리를 피하세요!</p>
+      <p>방향키로 진주를 모으세요! 1단계부터 3단계까지 점점 어려워집니다.</p>
     </header>
 
     <section class="info-panel">
       <div>점수: <span id="score">0</span></div>
       <div>목표: <span id="targetScore">15</span></div>
+      <div>단계: <span id="level">1</span> / 3</div>
       <div>생명: <span id="life">3</span></div>
       <div>상태: <span id="gameStatus">대기</span></div>
     </section>
@@ -43,6 +44,8 @@
       <div id="obstacleThree" class="obstacle obstacle-three">🪨</div>
 
       <div class="ground"></div>
+
+      <div id="levelNotice" class="level-notice">1단계</div>
 
       <div id="message" class="message">
         <strong>심해 진주 줍기</strong>
