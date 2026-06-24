@@ -41,6 +41,7 @@ let currentLevel = 1;
 let levelNoticeTimer = null;
 let gameStartTime = 0;
 let lastEndingRecord = null;
+let isEndingScreenOpen = false;
 
 const keys = {
   ArrowUp: false,
@@ -898,18 +899,21 @@ function saveEndingRecord() {
 
   showMessage(
     "기록 저장 완료!",
-    `${nickname}님의 플레이 로그가 TOP 10 랭킹에 저장되었습니다.`
+    `${nickname}님의 플레이 로그가 TOP 10 랭킹에 저장되었습니다.<br />다시 플레이하려면 아래의 게임 시작 또는 다시 시작 버튼을 눌러주세요.`
   );
 
   lastEndingRecord = null;
+  isEndingScreenOpen = true;
 }
 
 function showEndingMessage(isWin) {
+  isEndingScreenOpen = true;
+
   const resultText = isWin ? "성공" : "실패";
-  const title = isWin ? "성공!" : "게임 오버";
+  const title = isWin ? "최종 승리!" : "게임 오버";
   const description = isWin
-    ? "목표 진주를 모두 모았습니다!"
-    : "장애물에 너무 많이 부딪혔습니다.";
+    ? "3단계까지 통과해서 목표 진주를 모두 모았습니다!"
+    : "아쉽지만 탐험이 종료되었습니다.";
 
   const playTime = Date.now() - gameStartTime;
 
@@ -926,9 +930,9 @@ function showEndingMessage(isWin) {
   message.innerHTML = `
     <strong>${title}</strong>
     <span>${description}</span>
-    <span class="level-badge">도달 단계: ${currentLevel} / 3</span>
+    <span class="level-badge">도달 단계: ${currentLevel} / 3 · 점수: ${score}점 · 시간: ${formatPlayTime(playTime)}</span>
     <span class="save-hint">
-      닉네임을 남기면 이번 플레이 로그가 랭킹에 저장됩니다.
+      닉네임을 입력하면 이번 플레이 로그가 TOP 10 랭킹에 저장됩니다.
     </span>
     <div class="nickname-form">
       <input
@@ -950,6 +954,7 @@ function showEndingMessage(isWin) {
   nicknameInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
+      event.stopPropagation();
       saveEndingRecord();
     }
   });
@@ -997,6 +1002,7 @@ function resetGameObjects() {
 function startGame() {
   resumeAudio();
   playButtonSound();
+  isEndingScreenOpen = false;
 
   score = 0;
   life = 3;
@@ -1027,6 +1033,7 @@ function startGame() {
 
 function resetGame() {
   playButtonSound();
+  isEndingScreenOpen = false;
 
   isPlaying = false;
   isInvincible = false;
@@ -1265,6 +1272,8 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
 
     if (!isPlaying) {
+      if (isEndingScreenOpen) return;
+
       startGame();
     }
 
@@ -1287,6 +1296,8 @@ controlButtons.forEach((button) => {
     event.preventDefault();
 
     if (!isPlaying) {
+      if (isEndingScreenOpen) return;
+
       startGame();
     }
 
