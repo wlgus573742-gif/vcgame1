@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>심해 진주 줍기</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="game-wrapper">
+    <section class="title-area">
+      <h1>심해 진주 줍기</h1>
+      <p>30초 안에 진주 10개를 모으고 해파리를 피하세요!</p>
+    </section>
+
+    <section class="hud">
+      <div class="hud-box">점수 <strong id="score">0</strong> / 10</div>
+      <div class="hud-box">남은 시간 <strong id="time">30</strong>초</div>
+      <div class="hud-box">상태 <strong id="status">대기 중</strong></div>
+    </section>
+
+    <section class="game-area" id="gameArea">
+      <div class="bubble bubble-1"></div>
+      <div class="bubble bubble-2"></div>
+      <div class="bubble bubble-3"></div>
+
+      <div id="player" class="player">🤿</div>
+      <div id="pearl" class="pearl">🦪</div>
+      <div id="jellyfish" class="jellyfish">🪼</div>
+
+      <div id="messagePanel" class="message-panel">
+        <h2 id="messageTitle">심해 진주 줍기</h2>
+        <p id="messageText">방향키로 잠수부를 움직여 진주를 모으세요.</p>
+        <button id="startButton">게임 시작</button>
+      </div>
+    </section>
+
+    <section class="guide">
+      <p><strong>조작:</strong> 방향키 ← ↑ ↓ →</p>
+      <p><strong>승리:</strong> 30초 안에 진주 10개 수집</p>
+      <p><strong>패배:</strong> 시간 초과 또는 해파리와 충돌</p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at top, rgba(111, 211, 255, 0.35), transparent 35%),
+    linear-gradient(180deg, #063b6f 0%, #02172f 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-wrapper {
+  width: 760px;
+  max-width: calc(100vw - 24px);
+  padding: 20px;
+}
+
+.title-area {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.title-area h1 {
+  margin: 0 0 8px;
+  font-size: 36px;
+  color: #ffe680;
+  text-shadow: 0 0 14px rgba(255, 230, 128, 0.65);
+}
+
+.title-area p {
+  margin: 0;
+  color: #c8f2ff;
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.hud-box {
+  padding: 12px;
+  border: 2px solid rgba(151, 232, 255, 0.8);
+  border-radius: 14px;
+  background-color: rgba(3, 27, 56, 0.72);
+  text-align: center;
+  box-shadow: 0 0 18px rgba(84, 197, 255, 0.24);
+}
+
+.hud-box strong {
+  color: #ffe680;
+}
+
+.game-area {
+  position: relative;
+  width: 100%;
+  height: 460px;
+  overflow: hidden;
+  border: 3px solid rgba(151, 232, 255, 0.95);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(18, 138, 190, 0.6), rgba(0, 35, 82, 0.95)),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04) 0,
+      rgba(255, 255, 255, 0.04) 2px,
+      transparent 2px,
+      transparent 80px
+    );
+  box-shadow:
+    inset 0 0 45px rgba(14, 221, 255, 0.16),
+    0 18px 50px rgba(0, 0, 0, 0.32);
+}
+
+.player,
+.pearl,
+.jellyfish {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+}
+
+.player {
+  left: 80px;
+  top: 200px;
+  font-size: 40px;
+  z-index: 3;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.65));
+}
+
+.pearl {
+  left: 500px;
+  top: 230px;
+  font-size: 34px;
+  z-index: 2;
+  animation: float 1.4s ease-in-out infinite;
+}
+
+.jellyfish {
+  left: 340px;
+  top: 150px;
+  font-size: 40px;
+  z-index: 2;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.bubble {
+  position: absolute;
+  bottom: -40px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(211, 248, 255, 0.75);
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: rise 7s linear infinite;
+}
+
+.bubble-1 {
+  left: 16%;
+  animation-delay: 0s;
+}
+
+.bubble-2 {
+  left: 48%;
+  width: 24px;
+  height: 24px;
+  animation-delay: 2s;
+}
+
+.bubble-3 {
+  left: 80%;
+  width: 14px;
+  height: 14px;
+  animation-delay: 4s;
+}
+
+.message-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 10;
+  width: 340px;
+  max-width: calc(100% - 32px);
+  padding: 26px;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  border: 2px solid rgba(255, 230, 128, 0.9);
+  border-radius: 24px;
+  background-color: rgba(1, 17, 38, 0.88);
+  box-shadow: 0 0 30px rgba(255, 230, 128, 0.28);
+}
+
+.message-panel.hidden {
+  display: none;
+}
+
+.message-panel h2 {
+  margin: 0 0 10px;
+  color: #ffe680;
+}
+
+.message-panel p {
+  margin: 0 0 18px;
+  line-height: 1.5;
+  color: #d5f6ff;
+}
+
+button {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 999px;
+  background-color: #ffe680;
+  color: #08213d;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(255, 230, 128, 0.6);
+}
+
+.guide {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background-color: rgba(2, 23, 47, 0.65);
+  color: #d5f6ff;
+}
+
+.guide p {
+  margin: 6px 0;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(0);
+    opacity: 0.05;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+
+  to {
+    transform: translateY(-540px);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .hud {
+    grid-template-columns: 1fr;
+  }
+
+  .title-area h1 {
+    font-size: 28px;
+  }
+
+  .game-area {
+    height: 420px;
+  }
+}
