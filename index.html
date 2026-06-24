@@ -10,7 +10,7 @@
   <div class="game-wrapper">
     <header class="game-header">
       <h1>심해 진주 줍기</h1>
-      <p>스페이스바 또는 화면 클릭으로 장애물을 피하고 진주를 모으세요!</p>
+      <p>방향키로 다이버를 움직여 진주를 모으고 바위와 해파리를 피하세요!</p>
     </header>
 
     <section class="info-panel">
@@ -23,24 +23,30 @@
     <main id="gameArea" class="game-area">
       <div class="water-light light-one"></div>
       <div class="water-light light-two"></div>
+      <div class="water-light light-three"></div>
 
       <div class="bubble bubble-one"></div>
       <div class="bubble bubble-two"></div>
       <div class="bubble bubble-three"></div>
+      <div class="bubble bubble-four"></div>
 
       <div class="seaweed seaweed-one"></div>
       <div class="seaweed seaweed-two"></div>
       <div class="seaweed seaweed-three"></div>
+      <div class="seaweed seaweed-four"></div>
 
       <div id="player" class="player">🤿</div>
-      <div id="obstacle" class="obstacle">🪨</div>
       <div id="pearl" class="pearl">🦪</div>
+
+      <div id="obstacleOne" class="obstacle obstacle-one">🪨</div>
+      <div id="obstacleTwo" class="obstacle obstacle-two">🪼</div>
+      <div id="obstacleThree" class="obstacle obstacle-three">🪨</div>
 
       <div class="ground"></div>
 
       <div id="message" class="message">
         <strong>심해 진주 줍기</strong>
-        <span>시작 버튼을 눌러 게임을 시작하세요.</span>
+        <span>게임 시작을 누른 뒤 방향키로 움직이세요.</span>
       </div>
     </main>
 
@@ -52,8 +58,15 @@
     </div>
 
     <p class="guide-text">
-      조작: 스페이스바 / 마우스 클릭 / 화면 터치
+      조작: 방향키 ↑ ↓ ← → / WASD / 모바일은 화면 아래 조작 버튼 사용
     </p>
+
+    <div class="mobile-controls" aria-label="모바일 조작 버튼">
+      <button class="control-btn up" data-key="ArrowUp" type="button">▲</button>
+      <button class="control-btn left" data-key="ArrowLeft" type="button">◀</button>
+      <button class="control-btn down" data-key="ArrowDown" type="button">▼</button>
+      <button class="control-btn right" data-key="ArrowRight" type="button">▶</button>
+    </div>
   </div>
 
   <script src="script.js"></script>
