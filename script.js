@@ -365,15 +365,56 @@ function playWinSound() {
   if (!audio.sfxEnabled) return;
   resumeAudio();
 
-  const notes = [523, 659, 784, 1046, 1318];
+  // 승리 엔딩 사운드: 맑은 물방울 팡파르 + 반짝이는 상승 멜로디
+  const fanfareNotes = [
+    { frequency: 523, startTime: 0.00, duration: 0.16, gain: 0.10 },
+    { frequency: 659, startTime: 0.12, duration: 0.16, gain: 0.10 },
+    { frequency: 784, startTime: 0.24, duration: 0.18, gain: 0.11 },
+    { frequency: 1046, startTime: 0.38, duration: 0.22, gain: 0.12 },
+    { frequency: 1318, startTime: 0.58, duration: 0.28, gain: 0.10 }
+  ];
 
-  notes.forEach((note, index) => {
+  fanfareNotes.forEach((note) => {
     playTone({
-      frequency: note,
-      startTime: index * 0.11,
-      duration: 0.16,
-      gain: 0.1,
-      type: "triangle"
+      frequency: note.frequency,
+      startTime: note.startTime,
+      duration: note.duration,
+      gain: note.gain,
+      type: "triangle",
+      release: 0.22
+    });
+  });
+
+  // 진주를 모두 모았을 때의 반짝임
+  [0.08, 0.2, 0.34, 0.52, 0.72].forEach((delay, index) => {
+    playTone({
+      frequency: 1400 + index * 180,
+      startTime: delay,
+      duration: 0.08,
+      gain: 0.045,
+      type: "sine",
+      release: 0.2
+    });
+  });
+
+  // 맑은 물방울이 위로 올라가는 느낌
+  [0.16, 0.3, 0.46, 0.64, 0.86].forEach((delay) => {
+    playTone({
+      frequency: 900 + Math.random() * 500,
+      endFrequency: 1500 + Math.random() * 600,
+      startTime: delay,
+      duration: 0.12,
+      gain: 0.035,
+      type: "sine",
+      release: 0.18
+    });
+
+    playNoise({
+      startTime: delay,
+      duration: 0.2,
+      gain: 0.018,
+      filterFrequency: 2800,
+      filterType: "highpass"
     });
   });
 }
@@ -382,19 +423,65 @@ function playGameOverSound() {
   if (!audio.sfxEnabled) return;
   resumeAudio();
 
-  const notes = [392, 294, 220, 147];
+  // 패배 엔딩 사운드: 물속에서 가라앉는 듯한 하강음 + 둔탁한 충돌음
+  const failNotes = [
+    { frequency: 392, startTime: 0.00, duration: 0.2, gain: 0.11 },
+    { frequency: 294, startTime: 0.18, duration: 0.22, gain: 0.11 },
+    { frequency: 220, startTime: 0.36, duration: 0.24, gain: 0.10 },
+    { frequency: 147, startTime: 0.58, duration: 0.34, gain: 0.12 }
+  ];
 
-  notes.forEach((note, index) => {
+  failNotes.forEach((note) => {
     playTone({
-      frequency: note,
-      startTime: index * 0.13,
-      duration: 0.18,
-      gain: 0.12,
-      type: "sine"
+      frequency: note.frequency,
+      endFrequency: note.frequency * 0.72,
+      startTime: note.startTime,
+      duration: note.duration,
+      gain: note.gain,
+      type: "sine",
+      release: 0.22
     });
   });
 
-  playNoise({ startTime: 0.06, duration: 0.5, gain: 0.07, filterFrequency: 220 });
+  // 마지막 충돌감
+  playTone({
+    frequency: 95,
+    endFrequency: 52,
+    startTime: 0.62,
+    duration: 0.42,
+    gain: 0.15,
+    type: "sawtooth",
+    release: 0.28
+  });
+
+  playNoise({
+    startTime: 0.08,
+    duration: 0.55,
+    gain: 0.075,
+    filterFrequency: 240,
+    filterType: "lowpass"
+  });
+
+  playNoise({
+    startTime: 0.66,
+    duration: 0.85,
+    gain: 0.095,
+    filterFrequency: 180,
+    filterType: "lowpass"
+  });
+
+  // 힘이 빠지며 작은 기포가 사라지는 느낌
+  [0.72, 0.86, 1.02, 1.2].forEach((delay, index) => {
+    playTone({
+      frequency: 420 - index * 55,
+      endFrequency: 260 - index * 35,
+      startTime: delay,
+      duration: 0.1,
+      gain: 0.025,
+      type: "sine",
+      release: 0.2
+    });
+  });
 }
 
 function startBgm() {
