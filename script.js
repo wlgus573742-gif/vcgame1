@@ -86,8 +86,7 @@ const audio = {
   bgmGain: null,
   sfxGain: null,
   bgmNodes: [],
-  waterInterval: null,
-  sparkleInterval: null,
+  bgmIntervals: [],
   sfxEnabled: true,
   bgmEnabled: true,
   bgmStarted: false,
@@ -105,7 +104,7 @@ function initAudio() {
   audio.masterGain.connect(audio.ctx.destination);
 
   audio.bgmGain = audio.ctx.createGain();
-  audio.bgmGain.gain.value = 0.22;
+  audio.bgmGain.gain.value = 0.26;
   audio.bgmGain.connect(audio.masterGain);
 
   audio.sfxGain = audio.ctx.createGain();
@@ -130,7 +129,8 @@ function playTone({
   destination = audio.sfxGain,
   attack = 0.01,
   release = 0.08,
-  detune = 0
+  detune = 0,
+  endFrequency = null
 }) {
   if (!audio.ctx || !destination) return;
 
@@ -140,6 +140,14 @@ function playTone({
 
   oscillator.type = type;
   oscillator.frequency.setValueAtTime(frequency, now);
+
+  if (endFrequency) {
+    oscillator.frequency.exponentialRampToValueAtTime(
+      Math.max(endFrequency, 1),
+      now + duration
+    );
+  }
+
   oscillator.detune.setValueAtTime(detune, now);
 
   gainNode.gain.setValueAtTime(0.0001, now);
@@ -190,6 +198,116 @@ function playNoise({
 
   source.start(now);
   source.stop(now + duration);
+}
+
+function createLoopingWaterNoise() {
+  const duration = 5.5;
+  const sampleRate = audio.ctx.sampleRate;
+  const bufferSize = Math.floor(sampleRate * duration);
+  const buffer = audio.ctx.createBuffer(1, bufferSize, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  let value = 0;
+
+  for (let i = 0; i < bufferSize; i += 1) {
+    value += (Math.random() * 2 - 1) * 0.035;
+    value *= 0.985;
+    data[i] = value * 0.45;
+  }
+
+  const source = audio.ctx.createBufferSource();
+  const highpass = audio.ctx.createBiquadFilter();
+  const lowpass = audio.ctx.createBiquadFilter();
+  const flowGain = audio.ctx.createGain();
+  const lfo = audio.ctx.createOscillator();
+  const lfoGain = audio.ctx.createGain();
+
+  source.buffer = buffer;
+  source.loop = true;
+
+  highpass.type = "highpass";
+  highpass.frequency.value = 260;
+
+  lowpass.type = "lowpass";
+  lowpass.frequency.value = 3200;
+
+  flowGain.gain.value = 0.035;
+
+  lfo.type = "sine";
+  lfo.frequency.value = 0.08;
+  lfoGain.gain.value = 0.012;
+
+  lfo.connect(lfoGain);
+  lfoGain.connect(flowGain.gain);
+
+  source.connect(highpass);
+  highpass.connect(lowpass);
+  lowpass.connect(flowGain);
+  flowGain.connect(audio.bgmGain);
+
+  source.start();
+  lfo.start();
+
+  audio.bgmNodes.push(source, lfo);
+}
+
+function playAquariumDrop(delay = 0, volume = 1) {
+  const base = 880 + Math.random() * 760;
+  const second = base * (1.32 + Math.random() * 0.18);
+
+  playTone({
+    frequency: base,
+    endFrequency: base * 0.72,
+    startTime: delay,
+    duration: 0.09,
+    gain: 0.026 * volume,
+    type: "sine",
+    destination: audio.bgmGain,
+    attack: 0.004,
+    release: 0.18
+  });
+
+  playTone({
+    frequency: second,
+    endFrequency: second * 0.8,
+    startTime: delay + 0.055,
+    duration: 0.065,
+    gain: 0.016 * volume,
+    type: "triangle",
+    destination: audio.bgmGain,
+    attack: 0.004,
+    release: 0.14
+  });
+
+  playNoise({
+    startTime: delay,
+    duration: 0.18,
+    gain: 0.012 * volume,
+    filterFrequency: 2600 + Math.random() * 900,
+    filterType: "highpass",
+    destination: audio.bgmGain
+  });
+}
+
+function playSoftWaterRipple(delay = 0) {
+  playNoise({
+    startTime: delay,
+    duration: 0.55,
+    gain: 0.018,
+    filterFrequency: 1800 + Math.random() * 1200,
+    filterType: "bandpass",
+    destination: audio.bgmGain
+  });
+
+  playTone({
+    frequency: 620 + Math.random() * 260,
+    startTime: delay + 0.12,
+    duration: 0.2,
+    gain: 0.01,
+    type: "sine",
+    destination: audio.bgmGain,
+    release: 0.28
+  });
 }
 
 function playButtonSound() {
@@ -288,88 +406,74 @@ function startBgm() {
 
   audio.bgmStarted = true;
 
-  const now = audio.ctx.currentTime;
+  createLoopingWaterNoise();
 
-  const padOne = audio.ctx.createOscillator();
-  const padOneGain = audio.ctx.createGain();
-  padOne.type = "sine";
-  padOne.frequency.setValueAtTime(261.63, now);
-  padOneGain.gain.value = 0.035;
-  padOne.connect(padOneGain);
-  padOneGain.connect(audio.bgmGain);
+  const shimmerOne = audio.ctx.createOscillator();
+  const shimmerOneGain = audio.ctx.createGain();
+  const shimmerTwo = audio.ctx.createOscillator();
+  const shimmerTwoGain = audio.ctx.createGain();
+  const shimmerLfo = audio.ctx.createOscillator();
+  const shimmerLfoGain = audio.ctx.createGain();
 
-  const padTwo = audio.ctx.createOscillator();
-  const padTwoGain = audio.ctx.createGain();
-  padTwo.type = "triangle";
-  padTwo.frequency.setValueAtTime(392.0, now);
-  padTwoGain.gain.value = 0.024;
-  padTwo.connect(padTwoGain);
-  padTwoGain.connect(audio.bgmGain);
+  shimmerOne.type = "sine";
+  shimmerOne.frequency.value = 783.99;
+  shimmerOneGain.gain.value = 0.006;
 
-  const lfo = audio.ctx.createOscillator();
-  const lfoGain = audio.ctx.createGain();
-  lfo.frequency.value = 0.06;
-  lfoGain.gain.value = 8;
-  lfo.connect(lfoGain);
-  lfoGain.connect(padTwo.frequency);
+  shimmerTwo.type = "triangle";
+  shimmerTwo.frequency.value = 1174.66;
+  shimmerTwoGain.gain.value = 0.004;
 
-  padOne.start();
-  padTwo.start();
-  lfo.start();
+  shimmerLfo.frequency.value = 0.035;
+  shimmerLfoGain.gain.value = 5;
 
-  audio.bgmNodes.push(padOne, padTwo, lfo);
+  shimmerLfo.connect(shimmerLfoGain);
+  shimmerLfoGain.connect(shimmerTwo.frequency);
 
-  audio.waterInterval = setInterval(() => {
+  shimmerOne.connect(shimmerOneGain);
+  shimmerTwo.connect(shimmerTwoGain);
+  shimmerOneGain.connect(audio.bgmGain);
+  shimmerTwoGain.connect(audio.bgmGain);
+
+  shimmerOne.start();
+  shimmerTwo.start();
+  shimmerLfo.start();
+
+  audio.bgmNodes.push(shimmerOne, shimmerTwo, shimmerLfo);
+
+  const dropInterval = setInterval(() => {
     if (!audio.bgmEnabled || !audio.bgmStarted) return;
 
-    const delay = Math.random() * 0.7;
-    const basePitch = 850 + Math.random() * 650;
+    const count = Math.random() < 0.38 ? 2 : 1;
 
-    playTone({
-      frequency: basePitch,
-      startTime: delay,
-      duration: 0.08,
-      gain: 0.018,
-      type: "sine",
-      destination: audio.bgmGain,
-      release: 0.16
-    });
+    for (let i = 0; i < count; i += 1) {
+      playAquariumDrop(i * (0.08 + Math.random() * 0.08), 0.85 + Math.random() * 0.45);
+    }
+  }, 620 + Math.random() * 280);
 
-    playTone({
-      frequency: basePitch * 1.5,
-      startTime: delay + 0.08,
-      duration: 0.05,
-      gain: 0.012,
-      type: "triangle",
-      destination: audio.bgmGain,
-      release: 0.12
-    });
-
-    playNoise({
-      startTime: delay,
-      duration: 0.28,
-      gain: 0.012,
-      filterFrequency: 2400,
-      filterType: "highpass",
-      destination: audio.bgmGain
-    });
-  }, 1450);
-
-  audio.sparkleInterval = setInterval(() => {
+  const rippleInterval = setInterval(() => {
     if (!audio.bgmEnabled || !audio.bgmStarted) return;
 
-    const melody = [659, 784, 880, 988, 1175];
-    const note = melody[Math.floor(Math.random() * melody.length)];
+    playSoftWaterRipple(Math.random() * 0.4);
+  }, 2300);
+
+  const sparkleInterval = setInterval(() => {
+    if (!audio.bgmEnabled || !audio.bgmStarted) return;
+
+    const notes = [659, 784, 880, 987, 1174, 1318];
+    const note = notes[Math.floor(Math.random() * notes.length)];
 
     playTone({
       frequency: note,
-      duration: 0.18,
-      gain: 0.014,
+      duration: 0.16,
+      gain: 0.008,
       type: "sine",
       destination: audio.bgmGain,
-      release: 0.28
+      attack: 0.01,
+      release: 0.42
     });
-  }, 3200);
+  }, 4200);
+
+  audio.bgmIntervals.push(dropInterval, rippleInterval, sparkleInterval);
 }
 
 function stopBgm() {
@@ -387,15 +491,11 @@ function stopBgm() {
   audio.bgmNodes = [];
   audio.bgmStarted = false;
 
-  if (audio.waterInterval) {
-    clearInterval(audio.waterInterval);
-    audio.waterInterval = null;
-  }
+  audio.bgmIntervals.forEach((intervalId) => {
+    clearInterval(intervalId);
+  });
 
-  if (audio.sparkleInterval) {
-    clearInterval(audio.sparkleInterval);
-    audio.sparkleInterval = null;
-  }
+  audio.bgmIntervals = [];
 }
 
 function updateSoundButtons() {
