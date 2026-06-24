@@ -3,44 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>심해 진주 줍기</title>
+  <title>심해 진주 줍기 게임</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="game-wrapper">
-    <section class="title-area">
+  <div class="game-wrapper">
+    <header class="game-header">
       <h1>심해 진주 줍기</h1>
-      <p>30초 안에 진주 10개를 모으고 해파리를 피하세요!</p>
+      <p>스페이스바 또는 화면 클릭으로 장애물을 피하고 진주를 모으세요!</p>
+    </header>
+
+    <section class="info-panel">
+      <div>점수: <span id="score">0</span></div>
+      <div>목표: <span id="targetScore">15</span></div>
+      <div>생명: <span id="life">3</span></div>
+      <div>상태: <span id="gameStatus">대기</span></div>
     </section>
 
-    <section class="hud">
-      <div class="hud-box">점수 <strong id="score">0</strong> / 10</div>
-      <div class="hud-box">남은 시간 <strong id="time">30</strong>초</div>
-      <div class="hud-box">상태 <strong id="status">대기 중</strong></div>
-    </section>
+    <main id="gameArea" class="game-area">
+      <div class="water-light light-one"></div>
+      <div class="water-light light-two"></div>
 
-    <section class="game-area" id="gameArea">
-      <div class="bubble bubble-1"></div>
-      <div class="bubble bubble-2"></div>
-      <div class="bubble bubble-3"></div>
+      <div class="bubble bubble-one"></div>
+      <div class="bubble bubble-two"></div>
+      <div class="bubble bubble-three"></div>
+
+      <div class="seaweed seaweed-one"></div>
+      <div class="seaweed seaweed-two"></div>
+      <div class="seaweed seaweed-three"></div>
 
       <div id="player" class="player">🤿</div>
+      <div id="obstacle" class="obstacle">🪨</div>
       <div id="pearl" class="pearl">🦪</div>
-      <div id="jellyfish" class="jellyfish">🪼</div>
 
-      <div id="messagePanel" class="message-panel">
-        <h2 id="messageTitle">심해 진주 줍기</h2>
-        <p id="messageText">방향키로 잠수부를 움직여 진주를 모으세요.</p>
-        <button id="startButton">게임 시작</button>
+      <div class="ground"></div>
+
+      <div id="message" class="message">
+        <strong>심해 진주 줍기</strong>
+        <span>시작 버튼을 눌러 게임을 시작하세요.</span>
       </div>
-    </section>
+    </main>
 
-    <section class="guide">
-      <p><strong>조작:</strong> 방향키 ← ↑ ↓ →</p>
-      <p><strong>승리:</strong> 30초 안에 진주 10개 수집</p>
-      <p><strong>패배:</strong> 시간 초과 또는 해파리와 충돌</p>
-    </section>
-  </main>
+    <div class="button-row">
+      <button id="startBtn" type="button">게임 시작</button>
+      <button id="resetBtn" type="button">다시 시작</button>
+      <button id="soundBtn" type="button">효과음 ON</button>
+      <button id="bgmBtn" type="button">BGM ON</button>
+    </div>
+
+    <p class="guide-text">
+      조작: 스페이스바 / 마우스 클릭 / 화면 터치
+    </p>
+  </div>
 
   <script src="script.js"></script>
 </body>
