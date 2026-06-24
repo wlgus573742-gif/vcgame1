@@ -287,6 +287,117 @@ button:disabled {
   font-size: 13px;
 }
 
+.ranking-panel {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(155, 237, 255, 0.35);
+  border-radius: 16px;
+  background: rgba(0, 28, 58, 0.48);
+  box-shadow: 0 0 18px rgba(83, 218, 255, 0.12);
+}
+
+.ranking-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.ranking-title-row h2 {
+  margin: 0;
+  color: #fff5a8;
+  font-size: 18px;
+}
+
+.small-btn {
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.ranking-list {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.ranking-list li {
+  margin: 7px 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(195, 249, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #e9fbff;
+  line-height: 1.35;
+}
+
+.ranking-list .empty-ranking {
+  list-style: none;
+  margin-left: -22px;
+  color: #b8eaf3;
+  text-align: center;
+}
+
+.ranking-name {
+  color: #fff08a;
+  font-weight: 800;
+}
+
+.ranking-result {
+  color: #82f7ff;
+  font-weight: 700;
+}
+
+.ranking-meta {
+  color: #bfefff;
+  font-size: 12px;
+}
+
+.nickname-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.nickname-form input {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(195, 249, 255, 0.55);
+  border-radius: 12px;
+  outline: none;
+  color: #ffffff;
+  background: rgba(0, 32, 62, 0.82);
+}
+
+.nickname-form input::placeholder {
+  color: #acdce7;
+}
+
+.nickname-form button {
+  padding: 11px 14px;
+  white-space: nowrap;
+}
+
+.save-hint {
+  margin-top: 8px;
+  color: #bfefff;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .ranking-title-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nickname-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 .mobile-controls {
   display: none;
   grid-template-columns: repeat(3, 62px);

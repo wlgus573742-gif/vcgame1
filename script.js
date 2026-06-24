@@ -15,6 +15,8 @@ const startBtn = document.getElementById("startBtn");
 const resetBtn = document.getElementById("resetBtn");
 const soundBtn = document.getElementById("soundBtn");
 const bgmBtn = document.getElementById("bgmBtn");
+const clearRankingBtn = document.getElementById("clearRankingBtn");
+const rankingList = document.getElementById("rankingList");
 const controlButtons = document.querySelectorAll(".control-btn");
 
 const targetScore = 15;
@@ -31,6 +33,8 @@ let gameLoopId = null;
 let lastFrameTime = 0;
 let lastHitTime = 0;
 let difficultyLevel = 1;
+let gameStartTime = 0;
+let lastEndingRecord = null;
 
 const keys = {
   ArrowUp: false,
@@ -79,6 +83,8 @@ const obstacles = [
 ];
 
 targetScoreEl.textContent = targetScore;
+
+const rankingStorageKey = "vcgame1-ranking-top10";
 
 const audio = {
   ctx: null,
@@ -647,6 +653,165 @@ function hideMessage() {
   message.classList.add("hide");
 }
 
+function formatPlayTime(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes <= 0) {
+    return `${seconds}초`;
+  }
+
+  return `${minutes}분 ${seconds}초`;
+}
+
+function getRankings() {
+  try {
+    const saved = localStorage.getItem(rankingStorageKey);
+    const parsed = saved ? JSON.parse(saved) : [];
+
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed;
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveRankings(rankings) {
+  localStorage.setItem(rankingStorageKey, JSON.stringify(rankings.slice(0, 10)));
+}
+
+function sortRankings(rankings) {
+  return rankings.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+
+    if (a.result !== b.result) {
+      return a.result === "성공" ? -1 : 1;
+    }
+
+    return a.playTime - b.playTime;
+  });
+}
+
+function renderRankings() {
+  const rankings = getRankings();
+
+  if (!rankingList) return;
+
+  if (rankings.length === 0) {
+    rankingList.innerHTML = `<li class="empty-ranking">아직 기록이 없습니다.</li>`;
+    return;
+  }
+
+  rankingList.innerHTML = rankings
+    .map((rank, index) => {
+      return `
+        <li>
+          <span class="ranking-name">${index + 1}. ${rank.nickname}</span>
+          <span class="ranking-result"> ${rank.result}</span>
+          <br />
+          <span class="ranking-meta">
+            점수 ${rank.score}점 · 생명 ${rank.life} · 플레이 시간 ${formatPlayTime(rank.playTime)} · ${rank.date}
+          </span>
+        </li>
+      `;
+    })
+    .join("");
+}
+
+function sanitizeNickname(value) {
+  return value
+    .trim()
+    .replace(/[<>&"']/g, "")
+    .slice(0, 10);
+}
+
+function saveEndingRecord() {
+  const input = document.getElementById("nicknameInput");
+
+  if (!input || !lastEndingRecord) return;
+
+  const nickname = sanitizeNickname(input.value);
+
+  if (!nickname) {
+    input.focus();
+    input.placeholder = "닉네임을 입력해주세요";
+    return;
+  }
+
+  const rankings = getRankings();
+
+  rankings.push({
+    ...lastEndingRecord,
+    nickname
+  });
+
+  const sorted = sortRankings(rankings).slice(0, 10);
+  saveRankings(sorted);
+  renderRankings();
+
+  showMessage(
+    "기록 저장 완료!",
+    `${nickname}님의 플레이 로그가 TOP 10 랭킹에 저장되었습니다.`
+  );
+
+  lastEndingRecord = null;
+}
+
+function showEndingMessage(isWin) {
+  const resultText = isWin ? "성공" : "실패";
+  const title = isWin ? "성공!" : "게임 오버";
+  const description = isWin
+    ? "목표 진주를 모두 모았습니다!"
+    : "장애물에 너무 많이 부딪혔습니다.";
+
+  const playTime = Date.now() - gameStartTime;
+
+  lastEndingRecord = {
+    result: resultText,
+    score,
+    life,
+    playTime,
+    date: new Date().toLocaleString("ko-KR")
+  };
+
+  message.classList.remove("hide");
+  message.innerHTML = `
+    <strong>${title}</strong>
+    <span>${description}</span>
+    <span class="save-hint">
+      닉네임을 남기면 이번 플레이 로그가 랭킹에 저장됩니다.
+    </span>
+    <div class="nickname-form">
+      <input
+        id="nicknameInput"
+        type="text"
+        maxlength="10"
+        placeholder="닉네임 입력"
+        autocomplete="off"
+      />
+      <button id="saveRankingBtn" type="button">기록 저장</button>
+    </div>
+  `;
+
+  const saveRankingBtn = document.getElementById("saveRankingBtn");
+  const nicknameInput = document.getElementById("nicknameInput");
+
+  saveRankingBtn.addEventListener("click", saveEndingRecord);
+
+  nicknameInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      saveEndingRecord();
+    }
+  });
+
+  setTimeout(() => {
+    nicknameInput.focus();
+  }, 80);
+}
+
 function resetKeys() {
   Object.keys(keys).forEach((key) => {
     keys[key] = false;
@@ -695,6 +860,8 @@ function startGame() {
   isInvincible = false;
   lastFrameTime = 0;
   lastHitTime = 0;
+  gameStartTime = Date.now();
+  lastEndingRecord = null;
 
   resetKeys();
   resetGameObjects();
@@ -722,6 +889,8 @@ function resetGame() {
   difficultyLevel = 1;
   lastFrameTime = 0;
   lastHitTime = 0;
+  gameStartTime = Date.now();
+  lastEndingRecord = null;
 
   resetKeys();
   resetGameObjects();
@@ -753,11 +922,11 @@ function endGame(isWin) {
 
   if (isWin) {
     gameStatusEl.textContent = "성공";
-    showMessage("성공!", "목표 진주를 모두 모았습니다!");
+    showEndingMessage(true);
     playWinSound();
   } else {
     gameStatusEl.textContent = "실패";
-    showMessage("게임 오버", "장애물에 너무 많이 부딪혔습니다.");
+    showEndingMessage(false);
     playGameOverSound();
   }
 }
@@ -1013,6 +1182,17 @@ window.addEventListener("blur", () => {
   player.classList.remove("moving");
 });
 
+clearRankingBtn.addEventListener("click", () => {
+  const shouldClear = confirm("저장된 TOP 10 랭킹을 모두 삭제할까요?");
+
+  if (!shouldClear) return;
+
+  localStorage.removeItem(rankingStorageKey);
+  renderRankings();
+  playButtonSound();
+});
+
 resetGameObjects();
 updateInfo();
 updateSoundButtons();
+renderRankings();
