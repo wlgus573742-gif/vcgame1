@@ -5,10 +5,13 @@ const levelNotice = document.getElementById("levelNotice");
 const obstacleOne = document.getElementById("obstacleOne");
 const obstacleTwo = document.getElementById("obstacleTwo");
 const obstacleThree = document.getElementById("obstacleThree");
+const obstacleFour = document.getElementById("obstacleFour");
+const depthSteps = document.querySelectorAll(".depth-step");
 const message = document.getElementById("message");
 
 const scoreEl = document.getElementById("score");
 const targetScoreEl = document.getElementById("targetScore");
+const depthNameEl = document.getElementById("depthName");
 const levelEl = document.getElementById("level");
 const lifeEl = document.getElementById("life");
 const gameStatusEl = document.getElementById("gameStatus");
@@ -22,8 +25,8 @@ const rankingList = document.getElementById("rankingList");
 const controlButtons = document.querySelectorAll(".control-btn");
 
 const targetScore = 15;
-const maxLevel = 3;
-const scorePerLevel = 5;
+const maxLevel = 5;
+const scorePerLevel = 3;
 const playerSize = 58;
 const pearlSize = 52;
 const obstacleSize = 58;
@@ -89,9 +92,16 @@ const obstacles = [
     vx: 92,
     vy: -62,
     isActive: false
+  },
+  {
+    element: obstacleFour,
+    x: 650,
+    y: 210,
+    vx: -104,
+    vy: 66,
+    isActive: false
   }
 ];
-
 const baseObstacleSettings = obstacles.map((obstacle) => ({
   x: obstacle.x,
   y: obstacle.y,
@@ -106,36 +116,70 @@ const rankingStorageKey = "vcgame1-ranking-top10";
 const levelSettings = {
   1: {
     name: "1단계",
-    description: "기본 속도 / 장애물 2개",
-    playerSpeed: 275,
-    obstacleSpeedBoost: 0.9,
+    depthLabel: "10m",
+    title: "10m 얕은 바다",
+    description: "햇빛이 잘 드는 얕은 바다입니다.",
+    playerSpeed: 280,
+    obstacleSpeedBoost: 0.82,
     activeObstacles: 2,
+    obstacleIcons: ["🐠", "🪼", "🦀", "🐙"],
     collisionPadding: 18,
-    invincibleTime: 950,
-    pearlSafeDistance: 125
+    invincibleTime: 980,
+    pearlSafeDistance: 135
   },
   2: {
     name: "2단계",
-    description: "장애물 3개 / 이동 속도 증가",
-    playerSpeed: 260,
-    obstacleSpeedBoost: 1.18,
+    depthLabel: "50m",
+    title: "50m 산호 지대",
+    description: "산호와 복어가 늘어나며 움직임이 조금 빨라집니다.",
+    playerSpeed: 270,
+    obstacleSpeedBoost: 1.02,
     activeObstacles: 3,
-    collisionPadding: 14,
-    invincibleTime: 850,
-    pearlSafeDistance: 105
+    obstacleIcons: ["🐡", "🦀", "🪼", "🐙"],
+    collisionPadding: 16,
+    invincibleTime: 900,
+    pearlSafeDistance: 120
   },
   3: {
     name: "3단계",
-    description: "최고 난이도 / 장애물 속도 증가",
-    playerSpeed: 245,
-    obstacleSpeedBoost: 1.52,
+    depthLabel: "200m",
+    title: "200m 어스름 해역",
+    description: "빛이 줄어들고 오징어와 문어가 등장합니다.",
+    playerSpeed: 258,
+    obstacleSpeedBoost: 1.22,
     activeObstacles: 3,
+    obstacleIcons: ["🦑", "🐙", "🪼", "🦀"],
+    collisionPadding: 14,
+    invincibleTime: 840,
+    pearlSafeDistance: 105
+  },
+  4: {
+    name: "4단계",
+    depthLabel: "1000m",
+    title: "1000m 암흑 해역",
+    description: "상어가 등장하고 장애물 속도가 크게 증가합니다.",
+    playerSpeed: 248,
+    obstacleSpeedBoost: 1.42,
+    activeObstacles: 4,
+    obstacleIcons: ["🦈", "🦑", "🐙", "🪼"],
+    collisionPadding: 12,
+    invincibleTime: 760,
+    pearlSafeDistance: 92
+  },
+  5: {
+    name: "5단계",
+    depthLabel: "심해",
+    title: "심해",
+    description: "가장 어두운 심해입니다. 진주는 가장 밝게 빛납니다.",
+    playerSpeed: 238,
+    obstacleSpeedBoost: 1.66,
+    activeObstacles: 4,
+    obstacleIcons: ["🐙", "🦑", "🦈", "🪼"],
     collisionPadding: 10,
-    invincibleTime: 720,
-    pearlSafeDistance: 90
+    invincibleTime: 680,
+    pearlSafeDistance: 78
   }
 };
-
 const audio = {
   ctx: null,
   masterGain: null,
@@ -704,12 +748,15 @@ function randomPosition(size, avoidPlayer = true) {
 }
 
 function updateInfo() {
+  const settings = getCurrentLevelSettings();
+
   scoreEl.textContent = score;
+  depthNameEl.textContent = settings.depthLabel;
   levelEl.textContent = currentLevel;
   lifeEl.textContent = life;
 
   if (isPlaying) {
-    gameStatusEl.textContent = `${currentLevel}단계 진행 중`;
+    gameStatusEl.textContent = `${settings.title} 탐험 중`;
   } else {
     gameStatusEl.textContent = "대기";
   }
@@ -736,6 +783,20 @@ function getLevelByScore(value) {
   return Math.min(maxLevel, Math.floor(value / scorePerLevel) + 1);
 }
 
+function renderDepthTrack() {
+  depthSteps.forEach((step) => {
+    const stepLevel = Number(step.dataset.depthStep);
+
+    step.classList.toggle("active", stepLevel === currentLevel);
+    step.classList.toggle("cleared", stepLevel < currentLevel);
+  });
+}
+
+function applyDepthVisuals() {
+  gameArea.classList.remove("depth-1", "depth-2", "depth-3", "depth-4", "depth-5");
+  gameArea.classList.add(`depth-${currentLevel}`);
+}
+
 function showLevelNotice(text) {
   if (!levelNotice) return;
 
@@ -746,7 +807,7 @@ function showLevelNotice(text) {
 
   levelNoticeTimer = setTimeout(() => {
     levelNotice.classList.remove("show");
-  }, 1500);
+  }, 1700);
 }
 
 function applyLevelSettings(shouldResetVelocity = false) {
@@ -761,6 +822,7 @@ function applyLevelSettings(shouldResetVelocity = false) {
 
     obstacle.isActive = shouldBeActive;
     obstacle.element.style.display = shouldBeActive ? "flex" : "none";
+    obstacle.element.textContent = settings.obstacleIcons[index] || "🪼";
 
     if (shouldResetVelocity) {
       obstacle.x = base.x;
@@ -779,6 +841,9 @@ function applyLevelSettings(shouldResetVelocity = false) {
 
     applyPosition(obstacle.element, obstacle.x, obstacle.y);
   });
+
+  renderDepthTrack();
+  applyDepthVisuals();
 }
 
 function checkLevelProgression() {
@@ -791,7 +856,7 @@ function checkLevelProgression() {
   updateInfo();
 
   const settings = getCurrentLevelSettings();
-  showLevelNotice(`${settings.name} 진입!`);
+  showLevelNotice(`${settings.name} · 수심 ${settings.depthLabel}`);
   playLevelUpSound();
 }
 
@@ -858,7 +923,7 @@ function renderRankings() {
           <span class="ranking-result"> ${rank.result}</span>
           <br />
           <span class="ranking-meta">
-            점수 ${rank.score}점 · 도달 단계 ${rank.level || 1}/3 · 생명 ${rank.life} · 플레이 시간 ${formatPlayTime(rank.playTime)} · ${rank.date}
+            점수 ${rank.score}점 · 수심 ${rank.depthLabel || `${rank.level || 1}단계`} · 생명 ${rank.life} · 플레이 시간 ${formatPlayTime(rank.playTime)} · ${rank.date}
           </span>
         </li>
       `;
@@ -909,10 +974,11 @@ function saveEndingRecord() {
 function showEndingMessage(isWin) {
   isEndingScreenOpen = true;
 
+  const settings = getCurrentLevelSettings();
   const resultText = isWin ? "성공" : "실패";
-  const title = isWin ? "최종 승리!" : "게임 오버";
+  const title = isWin ? "심해 탐험 성공!" : "탐험 종료";
   const description = isWin
-    ? "3단계까지 통과해서 목표 진주를 모두 모았습니다!"
+    ? "5단계 심해까지 내려가 목표 진주를 모두 모았습니다!"
     : "아쉽지만 탐험이 종료되었습니다.";
 
   const playTime = Date.now() - gameStartTime;
@@ -921,6 +987,7 @@ function showEndingMessage(isWin) {
     result: resultText,
     score,
     level: currentLevel,
+    depthLabel: settings.depthLabel,
     life,
     playTime,
     date: new Date().toLocaleString("ko-KR")
@@ -930,7 +997,7 @@ function showEndingMessage(isWin) {
   message.innerHTML = `
     <strong>${title}</strong>
     <span>${description}</span>
-    <span class="level-badge">도달 단계: ${currentLevel} / 3 · 점수: ${score}점 · 시간: ${formatPlayTime(playTime)}</span>
+    <span class="level-badge">도달 수심: ${settings.title} · 점수: ${score}점 · 시간: ${formatPlayTime(playTime)}</span>
     <span class="save-hint">
       닉네임을 입력하면 이번 플레이 로그가 TOP 10 랭킹에 저장됩니다.
     </span>
@@ -992,6 +1059,11 @@ function resetGameObjects() {
   obstacles[2].y = 315;
   obstacles[2].vx = 92;
   obstacles[2].vy = -62;
+
+  obstacles[3].x = 650;
+  obstacles[3].y = 210;
+  obstacles[3].vx = -104;
+  obstacles[3].vy = 66;
 
   applyPosition(player, playerState.x, playerState.y);
   applyPosition(pearl, pearlState.x, pearlState.y);
@@ -1059,7 +1131,7 @@ function resetGame() {
     gameLoopId = null;
   }
 
-  showMessage("심해 진주 줍기", "1단계부터 시작해 진주를 모을수록 2단계, 3단계로 어려워집니다.");
+  showMessage("심해 진주 줍기", "10m 얕은 바다에서 시작해 진주를 모을수록 50m, 200m, 1000m, 심해로 내려갑니다.");
 }
 
 function endGame(isWin) {
@@ -1130,7 +1202,7 @@ function movePlayer(deltaTime) {
 function moveObstacles(deltaTime) {
   const bounds = getBounds();
   const settings = getCurrentLevelSettings();
-  const scorePressure = Math.min(score * 0.012, 0.18);
+  const scorePressure = Math.min(score * 0.014, 0.22);
   const speedBoost = settings.obstacleSpeedBoost + scorePressure;
 
   obstacles.forEach((obstacle) => {
@@ -1259,6 +1331,8 @@ function setKeyState(code, value) {
 }
 
 document.addEventListener("keydown", (event) => {
+  if (event.target.matches("input, textarea, select")) return;
+
   if (
     event.code === "ArrowUp" ||
     event.code === "ArrowDown" ||

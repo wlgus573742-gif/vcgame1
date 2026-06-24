@@ -10,18 +10,42 @@
   <div class="game-wrapper">
     <header class="game-header">
       <h1>심해 진주 줍기</h1>
-      <p>방향키로 진주를 모으세요! 1단계부터 3단계까지 점점 어려워집니다.</p>
+      <p>수심 10m에서 시작해 심해까지 내려가며 진주를 모으세요!</p>
     </header>
 
     <section class="info-panel">
       <div>점수: <span id="score">0</span></div>
       <div>목표: <span id="targetScore">15</span></div>
-      <div>단계: <span id="level">1</span> / 3</div>
+      <div>수심: <span id="depthName">10m</span></div>
+      <div>단계: <span id="level">1</span> / 5</div>
       <div>생명: <span id="life">3</span></div>
       <div>상태: <span id="gameStatus">대기</span></div>
     </section>
 
-    <main id="gameArea" class="game-area">
+    <section class="depth-track" aria-label="수심 단계">
+      <div class="depth-step active" data-depth-step="1">
+        <strong>1단계</strong>
+        <span>10m 얕은 바다</span>
+      </div>
+      <div class="depth-step" data-depth-step="2">
+        <strong>2단계</strong>
+        <span>50m 산호 지대</span>
+      </div>
+      <div class="depth-step" data-depth-step="3">
+        <strong>3단계</strong>
+        <span>200m 어스름 해역</span>
+      </div>
+      <div class="depth-step" data-depth-step="4">
+        <strong>4단계</strong>
+        <span>1000m 암흑 해역</span>
+      </div>
+      <div class="depth-step" data-depth-step="5">
+        <strong>5단계</strong>
+        <span>심해</span>
+      </div>
+    </section>
+
+    <main id="gameArea" class="game-area depth-1">
       <div class="water-light light-one"></div>
       <div class="water-light light-two"></div>
       <div class="water-light light-three"></div>
@@ -39,17 +63,18 @@
       <div id="player" class="player">🤿</div>
       <div id="pearl" class="pearl">🦪</div>
 
-      <div id="obstacleOne" class="obstacle obstacle-one">🪨</div>
+      <div id="obstacleOne" class="obstacle obstacle-one">🐠</div>
       <div id="obstacleTwo" class="obstacle obstacle-two">🪼</div>
-      <div id="obstacleThree" class="obstacle obstacle-three">🪨</div>
+      <div id="obstacleThree" class="obstacle obstacle-three">🦀</div>
+      <div id="obstacleFour" class="obstacle obstacle-four">🐙</div>
 
       <div class="ground"></div>
 
-      <div id="levelNotice" class="level-notice">1단계</div>
+      <div id="levelNotice" class="level-notice">수심 10m</div>
 
       <div id="message" class="message">
         <strong>심해 진주 줍기</strong>
-        <span>게임 시작을 누른 뒤 방향키로 움직이세요.</span>
+        <span>10m 얕은 바다에서 시작해 심해까지 내려가세요.</span>
       </div>
     </main>
 

@@ -41,7 +41,7 @@ body {
 
 .info-panel {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -58,6 +58,147 @@ body {
 .info-panel span {
   color: #fff08a;
   font-weight: 800;
+}
+
+
+.depth-track {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.depth-step {
+  padding: 10px 8px;
+  border: 1px solid rgba(155, 237, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(0, 28, 58, 0.44);
+  text-align: center;
+  opacity: 0.58;
+  transition: transform 0.18s ease, opacity 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.depth-step strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #fff5a8;
+  font-size: 13px;
+}
+
+.depth-step span {
+  display: block;
+  color: #c9f5ff;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.depth-step.active {
+  opacity: 1;
+  border-color: rgba(255, 245, 168, 0.85);
+  box-shadow: 0 0 18px rgba(255, 240, 138, 0.2);
+  transform: translateY(-2px);
+}
+
+.depth-step.cleared {
+  opacity: 0.82;
+  border-color: rgba(126, 255, 207, 0.38);
+}
+
+.game-area.depth-1 {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(235, 255, 255, 0.42), transparent 28%),
+    radial-gradient(circle at 82% 16%, rgba(140, 235, 255, 0.28), transparent 25%),
+    linear-gradient(180deg, #29bdd0 0%, #1394b6 44%, #08647e 100%);
+}
+
+.game-area.depth-2 {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(180, 255, 237, 0.28), transparent 27%),
+    radial-gradient(circle at 78% 20%, rgba(82, 211, 255, 0.22), transparent 25%),
+    linear-gradient(180deg, #1085a5 0%, #075a80 48%, #033d64 100%);
+}
+
+.game-area.depth-3 {
+  background:
+    radial-gradient(circle at 24% 12%, rgba(112, 225, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 82% 25%, rgba(63, 138, 255, 0.16), transparent 25%),
+    linear-gradient(180deg, #075b83 0%, #04375f 50%, #021f3f 100%);
+}
+
+.game-area.depth-4 {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(60, 178, 255, 0.13), transparent 26%),
+    radial-gradient(circle at 80% 20%, rgba(56, 79, 184, 0.14), transparent 24%),
+    linear-gradient(180deg, #033b62 0%, #021f3c 48%, #010b20 100%);
+}
+
+.game-area.depth-5 {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(82, 144, 255, 0.13), transparent 27%),
+    radial-gradient(circle at 18% 32%, rgba(143, 80, 255, 0.12), transparent 22%),
+    linear-gradient(180deg, #02172f 0%, #01091e 45%, #00040d 100%);
+}
+
+.game-area.depth-1 .water-light {
+  opacity: 0.78;
+}
+
+.game-area.depth-3 .water-light {
+  opacity: 0.44;
+}
+
+.game-area.depth-4 .water-light,
+.game-area.depth-5 .water-light {
+  opacity: 0.18;
+}
+
+.game-area.depth-4 .seaweed,
+.game-area.depth-5 .seaweed {
+  filter: brightness(0.72) saturate(0.8);
+}
+
+.game-area.depth-5 .obstacle {
+  filter:
+    drop-shadow(0 0 10px rgba(135, 92, 255, 0.35))
+    drop-shadow(0 7px 8px rgba(0, 0, 0, 0.45));
+}
+
+.game-area.depth-1 .pearl {
+  filter: drop-shadow(0 0 10px rgba(255, 247, 160, 0.75));
+}
+
+.game-area.depth-2 .pearl {
+  filter: drop-shadow(0 0 14px rgba(255, 247, 160, 0.9));
+}
+
+.game-area.depth-3 .pearl {
+  filter:
+    drop-shadow(0 0 18px rgba(255, 247, 160, 1))
+    drop-shadow(0 0 8px rgba(126, 235, 255, 0.55));
+}
+
+.game-area.depth-4 .pearl {
+  filter:
+    drop-shadow(0 0 22px rgba(255, 247, 160, 1))
+    drop-shadow(0 0 14px rgba(126, 235, 255, 0.8));
+}
+
+.game-area.depth-5 .pearl {
+  filter:
+    drop-shadow(0 0 28px rgba(255, 247, 160, 1))
+    drop-shadow(0 0 20px rgba(126, 235, 255, 1))
+    drop-shadow(0 0 12px rgba(210, 120, 255, 0.75));
+  animation: pearlDeepFloat 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes pearlDeepFloat {
+  from {
+    transform: translateY(-5px) scale(1.04);
+  }
+
+  to {
+    transform: translateY(8px) scale(1.16);
+  }
 }
 
 .game-area {
@@ -188,6 +329,11 @@ body {
 .obstacle-three {
   left: 190px;
   top: 315px;
+}
+
+.obstacle-four {
+  left: 650px;
+  top: 210px;
 }
 
 .ground {
@@ -608,6 +754,10 @@ button:disabled {
 
   .button-row {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .depth-track {
+    grid-template-columns: repeat(1, 1fr);
   }
 
   .mobile-controls {
